@@ -71,19 +71,24 @@ audx INPUT [-o OUTPUT] [-f FORMAT] [-q low|medium|high|lossless]
 
 ## Quality Presets
 
-Presets resolve to codec + bitrate defaults per output format. Lossless formats
-(wav, flac) ignore bitrate. Indicative mapping (finalized in `presets.py`):
+Presets resolve to a target bitrate for lossy output formats. Lossless formats
+(wav, flac) ignore bitrate entirely — they are always full quality regardless of
+preset. Indicative mapping for lossy targets (exact values finalized in
+`presets.py` and asserted in tests):
 
-| Preset | Lossy bitrate (mp3/aac/ogg/opus) | Lossless (wav/flac) |
-|---|---|---|
-| low | ~96k | n/a (always lossless) |
-| medium | ~192k | n/a |
-| high | ~256–320k | n/a |
-| lossless | maps to flac if output is lossy-only? No — see rule | full quality |
+| Preset | Lossy bitrate (mp3 / aac / ogg / opus) |
+|---|---|
+| low | ~96k |
+| medium | ~192k (default) |
+| high | ~256–320k |
+| lossless | highest sane bitrate for the format, plus a printed note that true lossless requires a lossless format |
 
-Rule: `lossless` is only meaningful for lossless formats; for a lossy target it
-falls back to the format's highest sane bitrate with a printed note. Exact values
-are decided in implementation and asserted in tests.
+Rules:
+- For **lossless output formats** (wav, flac), the `-q` preset is ignored; output
+  is always full quality.
+- For **lossy output formats**, `lossless` is not truly lossless — it maps to the
+  format's highest sane bitrate and prints a note suggesting flac/wav for true
+  lossless.
 
 ## Data Flow
 
