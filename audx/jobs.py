@@ -46,7 +46,10 @@ def _resolve_paths(input_str: str, recursive: bool) -> list[Path]:
             if f.is_file() and f.suffix.lower() in _SUPPORTED
         )
     if '*' in input_str or '?' in input_str:
-        return sorted(Path(f) for f in _glob.glob(input_str, recursive=recursive))
+        return sorted(
+            Path(f) for f in _glob.glob(input_str, recursive=recursive)
+            if Path(f).suffix.lower() in _SUPPORTED
+        )
     return [p]
 
 

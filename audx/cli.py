@@ -28,7 +28,7 @@ def main(argv=None):
 
     if not jobs:
         print(
-            "No files to convert (all outputs already exist; use --overwrite to replace).",
+            "No files to convert (no supported audio files matched, or all outputs already exist — use --overwrite to replace).",
             file=sys.stderr,
         )
         sys.exit(1)
@@ -60,6 +60,8 @@ def main(argv=None):
             print(' '.join(str(a) for a in cmd))
         sys.exit(0)
 
+    for job, cmd in commands:
+        job.output_path.parent.mkdir(parents=True, exist_ok=True)
     results = [run(cmd, job, verbose=args.verbose) for job, cmd in commands]
 
     failures = [r for r in results if not r.success]

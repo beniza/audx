@@ -15,8 +15,8 @@ _CODECS = {
 _BITRATES = {'low': '96k', 'medium': '192k', 'high': '320k', 'lossless': '320k'}
 
 _LOSSLESS_NOTE = (
-    "Note: '{fmt}' is a lossy format. Preset 'lossless' uses maximum bitrate "
-    "({br}). Use --format flac or --format wav for true lossless output."
+    "Note: '{fmt}' is a lossy format. Preset 'lossless' uses {br} bitrate. "
+    "Use --format flac or --format wav for true lossless output."
 )
 
 
@@ -44,7 +44,10 @@ def resolve(
     else:
         default_br = _BITRATES[quality]
         final_bitrate = bitrate if bitrate else default_br
-        note = _LOSSLESS_NOTE.format(fmt=fmt, br=final_bitrate) if quality == 'lossless' else None
+        if quality == 'lossless' and bitrate is None:
+            note = _LOSSLESS_NOTE.format(fmt=fmt, br=final_bitrate)
+        else:
+            note = None
 
     return Settings(
         codec=codec,

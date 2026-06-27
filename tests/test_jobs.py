@@ -88,3 +88,14 @@ def test_existing_output_included_with_overwrite(tmp_path):
     (tmp_path / 'song.mp3').write_bytes(b'exists')
     jobs = expand(str(src), fmt='mp3', overwrite=True)
     assert len(jobs) == 1
+
+
+# --- Glob ---
+
+def test_glob_filters_non_audio_files(tmp_path):
+    (tmp_path / 'song.wav').write_bytes(b'fake')
+    (tmp_path / 'notes.txt').write_bytes(b'ignore')
+    pattern = str(tmp_path / '*')
+    jobs = expand(pattern, fmt='mp3')
+    assert len(jobs) == 1
+    assert jobs[0].input_path.name == 'song.wav'
