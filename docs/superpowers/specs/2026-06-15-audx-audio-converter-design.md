@@ -1,7 +1,7 @@
 # audx — Audio Converter CLI
 
-**Date:** 2026-06-15
-**Status:** Approved design, pre-implementation
+**Date:** 2026-06-15 (updated 2026-06-27)
+**Status:** Approved — ready for implementation plan
 
 ## Summary
 
@@ -25,8 +25,12 @@ or via `--ffmpeg-path`; if missing, `audx` prints OS-specific install instructio
 
 - Multi audio-track selection (`--audio-stream N`) — deferred.
 - Video→video transcoding, trimming, filters, normalization, metadata editing.
-- Bundling ffmpeg into the exe or auto-downloading it.
+- Bundling ffmpeg into the exe or auto-downloading it (ffmpeg is proprietary; end users obtain it separately).
 - GUI.
+
+## Future Considerations (not committed)
+
+- **PyPI library (`audx` package):** the stdlib-only, modular architecture already makes `audx` library-friendly. A future `audx.convert(...)` API would require no structural changes — just a public interface on top of the existing modules.
 
 ## Architecture
 
@@ -39,7 +43,7 @@ Package layout: `audx/`
 | Module | One job | Depends on |
 |---|---|---|
 | `cli.py` | Parse args, orchestrate the run, format output/errors, set exit code | all below |
-| `ffmpeg.py` | Locate ffmpeg (PATH → `--ffmpeg-path`), version check, OS-specific install instructions if missing | stdlib `shutil`, `subprocess`, `platform` |
+| `ffmpeg.py` | Locate ffmpeg (PATH → `--ffmpeg-path`), version check, OS-specific install instructions if missing. Always invoke via `subprocess.run([ffmpeg_path, *args])` (list form, not shell string) — Python handles space-in-PATH quoting automatically on Windows. | stdlib `shutil`, `subprocess`, `platform` |
 | `presets.py` | Map output format + quality preset → codec/bitrate defaults; pure data + lookup | none |
 | `command.py` | Build the ffmpeg argument list from a resolved job | `presets` |
 | `jobs.py` | Expand input (single / glob / dir) into a list of jobs; derive output paths | stdlib `pathlib`, `glob` |
@@ -53,7 +57,7 @@ Package layout: `audx/`
 audx INPUT [-o OUTPUT] [-f FORMAT] [-q low|medium|high|lossless]
      [--bitrate 192k] [--sample-rate 44100] [--channels 1|2]
      [--ffmpeg-path PATH] [--recursive] [--overwrite]
-     [--dry-run] [-v/--verbose] [--version]
+     [--dry-run] [--script FILE] [-v/--verbose] [--version]
 ```
 
 - `INPUT` — a file, a glob (`*.wav`), or a directory.
@@ -67,6 +71,7 @@ audx INPUT [-o OUTPUT] [-f FORMAT] [-q low|medium|high|lossless]
   output names derive from source names with the new extension. `--recursive`
   walks subdirectories.
 - `--dry-run` — print the ffmpeg command(s) without executing.
+- `--script FILE` — write the resolved ffmpeg command(s) to a file (one per line), without executing. Useful as a teaching aid or for handing off to a job scheduler. Implies dry-run behavior.
 - Video inputs automatically add `-vn` (drop video stream).
 
 ## Quality Presets
@@ -78,9 +83,9 @@ preset. Indicative mapping for lossy targets (exact values finalized in
 
 | Preset | Lossy bitrate (mp3 / aac / ogg / opus) |
 |---|---|
-| low | ~96k |
-| medium | ~192k (default) |
-| high | ~256–320k |
+| low | 96k |
+| medium | 192k **(default)** |
+| high | 320k |
 | lossless | highest sane bitrate for the format, plus a printed note that true lossless requires a lossless format |
 
 Rules:
@@ -117,6 +122,10 @@ for each job: `presets.resolve(format, quality)` merged with overrides →
 
 ## Testing Strategy
 
+**Methodology: TDD (red → green → commit).** For every module, write the failing
+test first, run it to confirm it fails, implement the minimum code to pass, run
+again to confirm it passes, then commit. Never write implementation before its test.
+
 - **Unit (no ffmpeg needed):**
   - `presets` — preset → settings mapping, override precedence, lossless rules.
   - `command` — assert exact ffmpeg arg lists for representative jobs (audio↔audio,
@@ -125,9 +134,10 @@ for each job: `presets.resolve(format, quality)` merged with overrides →
     overwrite/skip decisions.
   - `ffmpeg.locate` — PATH found / `--ffmpeg-path` / missing (mocked), install-text
     selection per OS.
-- **Runner** — tested via `--dry-run` and mocked `subprocess`.
-- **Integration (optional, skipped if ffmpeg absent)** — a real tiny conversion
-  round-trip.
+- **Runner** — mocked `subprocess.run`; asserts list-form call (Windows PATH safety).
+- **CLI** — arg parsing unit tests + end-to-end tests with mocked `locate`/`subprocess`.
+- **Integration (optional, skipped if ffmpeg absent)** — real tiny WAV conversion
+  round-trip generated in-process via the `wave` stdlib module (no committed binary).
 
 ## Distribution
 
