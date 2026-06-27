@@ -1,10 +1,9 @@
-from pathlib import Path
 from audx.jobs import Job
 from audx.presets import Settings
 
 
 def build(ffmpeg_path, job: Job, settings: Settings) -> list[str]:
-    cmd = [ffmpeg_path.as_posix() if isinstance(ffmpeg_path, Path) else str(ffmpeg_path), '-y', '-i', str(job.input_path)]
+    cmd = [str(ffmpeg_path), '-y', '-i', str(job.input_path)]
     if job.is_video:
         cmd.append('-vn')
     cmd += ['-c:a', settings.codec]

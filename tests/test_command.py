@@ -47,8 +47,9 @@ def test_ffmpeg_path_as_string():
     assert cmd[0] == '/usr/bin/ffmpeg'
 
 def test_ffmpeg_path_as_path_object():
-    cmd = build(Path('/usr/bin/ffmpeg'), _job(), _settings())
-    assert cmd[0] == '/usr/bin/ffmpeg'
+    p = Path('/usr/bin/ffmpeg')
+    cmd = build(p, _job(), _settings())
+    assert cmd[0] == str(p)
 
 def test_overwrite_flag_always_present():
     cmd = build('ffmpeg', _job(), _settings())
