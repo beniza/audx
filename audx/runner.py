@@ -1,15 +1,17 @@
 import subprocess
 from dataclasses import dataclass
 
+from audx.jobs import Job
+
 
 @dataclass
 class Result:
-    job: object
+    job: Job
     success: bool
     error: str | None
 
 
-def run(cmd: list[str], job, verbose: bool = False) -> Result:
+def run(cmd: list[str], job: Job, verbose: bool = False) -> Result:
     try:
         proc = subprocess.run(cmd, capture_output=True, text=True)
         if proc.returncode == 0:

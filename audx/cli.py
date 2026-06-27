@@ -43,7 +43,7 @@ def main(argv=None):
             channels=args.channels,
         )
         if settings.note:
-            print(settings.note)
+            print(settings.note, file=sys.stderr)
         cmd = build(ffmpeg_path, job, settings)
         commands.append((job, cmd))
 
