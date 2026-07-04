@@ -1,11 +1,24 @@
 # audx
 
-Audio converter CLI built on [ffmpeg](https://ffmpeg.org). Converts between
-common audio formats and extracts audio from video files.
+A command-line audio converter built on [ffmpeg](https://ffmpeg.org). Converts
+between common audio formats, extracts audio from video files, and handles
+single files or whole directory trees in one batch — powered entirely by
+Python's standard library (no third-party runtime dependencies).
+
+## Features
+
+- Convert between mp3, wav, flac, aac/m4a, ogg, opus
+- Extract audio from video (mp4, mkv, mov) — video stream is dropped automatically
+- Friendly quality presets (`low` / `medium` / `high` / `lossless`) or explicit
+  bitrate/sample-rate/channel overrides
+- Batch convert a whole folder, optionally `--recursive`, preserving subfolder
+  structure in the output
+- `--dry-run` / `--script` to preview or export the ffmpeg commands without running them
+- Ships as a single standalone `audx.exe` — nothing to install but ffmpeg
 
 ## Requirements
 
-- [ffmpeg](https://ffmpeg.org/download.html) on PATH (or use `--ffmpeg-path`)
+- [ffmpeg](https://ffmpeg.org/download.html) on `PATH` (or pass `--ffmpeg-path`)
 
 **Install ffmpeg:**
 - Windows: `winget install ffmpeg`
@@ -14,22 +27,14 @@ common audio formats and extracts audio from video files.
 
 ## Install
 
+Download the latest `audx.exe` from [Releases](../../releases) — no Python required.
+
+Or, from source:
 ```sh
 pip install -e .
 ```
 
-Or use the pre-built `audx.exe` (Windows — see [Building](#building)).
-
-## Usage
-
-```
-audx INPUT [-o OUTPUT] [-f FORMAT] [-q PRESET]
-     [--bitrate RATE] [--sample-rate HZ] [--channels 1|2]
-     [--ffmpeg-path PATH] [--recursive] [--overwrite]
-     [--dry-run] [--script FILE] [-v] [--version]
-```
-
-### Examples
+## Quick start
 
 ```sh
 # Convert a single file
@@ -38,38 +43,14 @@ audx song.wav -f mp3
 # Extract audio from video at high quality
 audx video.mp4 -f flac -q high
 
-# Batch convert a directory
-audx ./music/ -f mp3 -o ./converted/
+# Batch convert a whole folder into another folder, recursively
+audx ./library/ -f mp3 -o ./converted/ --recursive
 
-# Batch recursively with custom bitrate
-audx ./library/ -f mp3 --recursive --bitrate 256k
-
-# Preview commands without running
+# Preview the ffmpeg commands without running them
 audx ./music/ -f mp3 --dry-run
-
-# Save commands to a script file
-audx ./music/ -f mp3 --script convert.sh
 ```
 
-### Quality Presets
-
-| Preset | Lossy bitrate | Lossless formats (wav/flac) |
-|--------|--------------|------------------------------|
-| `low` | 96k | always full quality |
-| `medium` *(default)* | 192k | always full quality |
-| `high` | 320k | always full quality |
-| `lossless` | 320k + note† | always full quality |
-
-†`lossless` on a lossy format uses maximum bitrate and prints a note recommending
-flac or wav for true lossless output.
-
-## Exit Codes
-
-| Code | Meaning |
-|------|---------|
-| `0` | All jobs succeeded |
-| `1` | One or more jobs failed, or validation error |
-| `2` | ffmpeg not found |
+See **[HELP.md](HELP.md)** for the full command reference, every flag, and troubleshooting.
 
 ## Building
 
@@ -86,3 +67,6 @@ pip install pyinstaller
 pyinstaller --onefile --name audx audx/__main__.py
 # Output: dist/audx
 ```
+
+Pushing a tag like `v0.2.0` runs [`.github/workflows/release.yml`](.github/workflows/release.yml),
+which builds `audx.exe` and publishes it as a GitHub Release automatically.
