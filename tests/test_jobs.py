@@ -72,6 +72,17 @@ def test_directory_recursive(tmp_path):
     jobs = expand(str(tmp_path), fmt='mp3', recursive=True)
     assert len(jobs) == 2
 
+def test_directory_recursive_with_output_preserves_subfolder_structure(tmp_path):
+    src_dir = tmp_path / 'src'
+    sub = src_dir / 'sub'
+    sub.mkdir(parents=True)
+    (src_dir / 'a.wav').write_bytes(b'fake')
+    (sub / 'b.wav').write_bytes(b'fake')
+    out_dir = tmp_path / 'out'
+    jobs = expand(str(src_dir), fmt='mp3', output=str(out_dir), recursive=True)
+    outputs = {j.output_path for j in jobs}
+    assert outputs == {out_dir / 'a.mp3', out_dir / 'sub' / 'b.mp3'}
+
 
 # --- Overwrite ---
 

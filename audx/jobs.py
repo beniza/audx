@@ -22,10 +22,11 @@ def expand(
     recursive: bool = False,
     overwrite: bool = False,
 ) -> list[Job]:
+    root = Path(input_str) if Path(input_str).is_dir() else None
     paths = _resolve_paths(input_str, recursive)
     jobs = []
     for p in paths:
-        out = _derive_output(p, fmt, output)
+        out = _derive_output(p, fmt, output, root)
         if out.exists() and not overwrite:
             continue
         jobs.append(Job(
@@ -53,12 +54,14 @@ def _resolve_paths(input_str: str, recursive: bool) -> list[Path]:
     return [p]
 
 
-def _derive_output(input_path: Path, fmt: str, output: str | None) -> Path:
+def _derive_output(input_path: Path, fmt: str, output: str | None, root: Path | None = None) -> Path:
     new_name = input_path.with_suffix(f'.{fmt}').name
     if output is None:
         return input_path.with_suffix(f'.{fmt}')
     out = Path(output)
     # Treat as directory if it already is one, or has no file extension
     if out.is_dir() or not out.suffix:
+        if root is not None:
+            out = out / input_path.parent.relative_to(root)
         return out / new_name
     return out
