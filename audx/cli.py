@@ -97,7 +97,7 @@ def _parse_args(argv=None):
     p.add_argument('--dry-run', action='store_true', dest='dry_run')
     p.add_argument('--script', metavar='FILE', help='Write commands to FILE without executing')
     p.add_argument('-v', '--verbose', action='store_true')
-    p.add_argument('--version', action='version', version='audx 0.2.0')
+    p.add_argument('--version', action='version', version='audx 0.2.1')
 
     args = p.parse_args(argv)
 
