@@ -68,5 +68,5 @@ pyinstaller --onefile --name audx audx/__main__.py
 # Output: dist/audx
 ```
 
-Pushing a tag like `v0.2.0` runs [`.github/workflows/release.yml`](.github/workflows/release.yml),
+Pushing a tag like `v0.2.1` runs [`.github/workflows/release.yml`](.github/workflows/release.yml),
 which builds `audx.exe` and publishes it as a GitHub Release automatically.
