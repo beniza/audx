@@ -40,3 +40,20 @@ def test_run_uses_list_form_not_shell():
     with patch('audx.runner.subprocess.run', return_value=mock_proc) as mock_run:
         run(['ffmpeg', '-i', 'in.wav', 'out.mp3'], _job())
     assert isinstance(mock_run.call_args[0][0], list)
+
+
+def test_run_parses_ffmpeg_speed_from_stderr():
+    mock_proc = MagicMock(
+        returncode=0,
+        stderr='size=  256kB time=00:00:16.10 bitrate= 130.5kbits/s speed=25.3x',
+    )
+    with patch('audx.runner.subprocess.run', return_value=mock_proc):
+        result = run(['ffmpeg'], _job())
+    assert result.speed == 25.3
+
+
+def test_run_speed_none_when_not_present():
+    mock_proc = MagicMock(returncode=0, stderr='')
+    with patch('audx.runner.subprocess.run', return_value=mock_proc):
+        result = run(['ffmpeg'], _job())
+    assert result.speed is None

@@ -95,6 +95,19 @@ def test_successful_run_exits_0(tmp_path):
             main([str(src), '-f', 'mp3', '--overwrite'])
     assert exc.value.code == 0
 
+def test_batch_run_prints_progress(tmp_path, capsys):
+    (tmp_path / 'a.wav').write_bytes(b'fake')
+    (tmp_path / 'b.wav').write_bytes(b'fake')
+    mock_proc = MagicMock(returncode=0, stderr='speed=10.0x')
+    with patch('audx.cli.locate', return_value=Path('ffmpeg')), \
+         patch('audx.runner.subprocess.run', return_value=mock_proc):
+        with pytest.raises(SystemExit) as exc:
+            main([str(tmp_path), '-f', 'mp3'])
+    assert exc.value.code == 0
+    out = capsys.readouterr().out
+    assert '1/2' in out
+    assert '2/2' in out
+
 def test_failed_run_exits_1(tmp_path, capsys):
     src = tmp_path / 'song.wav'
     src.write_bytes(b'fake')

@@ -1,5 +1,7 @@
 import argparse
+import shutil
 import sys
+import time
 from pathlib import Path
 
 from audx.ffmpeg import locate, FFmpegNotFound
@@ -7,6 +9,7 @@ from audx.jobs import expand
 from audx.presets import resolve
 from audx.command import build
 from audx.runner import run
+from audx.progress import format_line
 
 
 def main(argv=None):
@@ -62,7 +65,22 @@ def main(argv=None):
 
     for job, cmd in commands:
         job.output_path.parent.mkdir(parents=True, exist_ok=True)
-    results = [run(cmd, job, verbose=args.verbose) for job, cmd in commands]
+
+    results = []
+    speeds = []
+    total = len(commands)
+    live = sys.stdout.isatty()
+    start = time.monotonic()
+    for i, (job, cmd) in enumerate(commands, 1):
+        r = run(cmd, job, verbose=args.verbose)
+        results.append(r)
+        if r.speed is not None:
+            speeds.append(r.speed)
+        width = shutil.get_terminal_size().columns
+        line = format_line(i, total, time.monotonic() - start, speeds, job.input_path.name, width=width)
+        print(('\r' + line) if live else line, end='' if live else '\n', flush=live)
+    if live:
+        print()
 
     failures = [r for r in results if not r.success]
     for r in failures:
